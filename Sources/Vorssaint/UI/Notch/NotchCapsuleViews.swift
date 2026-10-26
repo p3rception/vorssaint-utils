@@ -429,7 +429,7 @@ private struct NotchCapsuleCompanionMark: View {
                     NotchCapsuleCalendarStrip.clockMark(countdown, now: context.date)
                 }
             }
-        case .timer, .keepAwake, .watch:
+        case .timer, .keepAwake, .watch, .call:
             EmptyView()
         }
     }
@@ -715,6 +715,52 @@ struct NotchCapsuleKeepAwakeStrip: View {
         .accessibilityValue(NotchKeepAwakeStrip.status(end: end, language: l10n.language))
         .accessibilityHint(FeatureStrings.notch(l10n.language).open)
         .accessibilityIdentifier("notch.keepAwake")
+    }
+}
+
+/// A call: the call app's icon, then the call's length. Clicking it brings
+/// the call app forward.
+struct NotchCapsuleCallStrip: View {
+    @ObservedObject var service: NotchService
+    let size: CGSize
+    /// Another display's capsule, when the island shows on every display.
+    var displayGeometry: NotchGeometry? = nil
+    @ObservedObject private var calls = NotchCallService.shared
+    @ObservedObject private var l10n = L10n.shared
+
+    var body: some View {
+        NotchStripHold(calls.call, shows: calls.call != nil) { call in
+            if let call {
+                TimelineView(.periodic(from: call.started, by: 1)) { context in row(call, now: context.date) }
+            }
+        }
+    }
+
+    private func row(_ call: NotchCall, now: Date) -> some View {
+        let reading = NotchCallSupport.reading(call, now: now)
+        return Button { NotchCallStrip.bringForward(call) } label: {
+            NotchCapsuleRow(size: size, geometry: displayGeometry ?? service.geometry) {
+                HStack(spacing: CapsuleLayout.spacing) {
+                    Image(nsImage: ResponsibleProcess.icon(for: call.pid, pointSize: CapsuleLayout.symbolSize))
+                        .resizable().frame(width: CapsuleLayout.symbolSize, height: CapsuleLayout.symbolSize)
+                    Text(reading)
+                        .font(Font(CapsuleLayout.readingFont as CTFont))
+                        .foregroundStyle(.green)
+                        .lineLimit(1).fixedSize()
+                        // A reading that changes shape, like 59:59 becoming
+                        // 1h00, resizes the capsule; the service measures the same.
+                        .onChange(of: NotchAgentSupport.readingShape(reading)) { _, _ in
+                            DispatchQueue.main.async { service.refreshPresentation() }
+                        }
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(FeatureStrings.notchActivities(l10n.language).call)
+        .accessibilityValue(NotchCallStrip.status(call, reading: reading))
+        .accessibilityIdentifier("notch.call")
     }
 }
 

@@ -18,6 +18,7 @@ enum NotchActivityTests {
         compactMarginContracts(suite)
         compactDownloadContracts(suite)
         keepAwakeContracts(suite)
+        callContracts(suite)
         accessoryContracts(suite)
         PeripheralBatteryLifecycleTests.run(suite)
         gateContracts(suite)
@@ -96,6 +97,48 @@ enum NotchActivityTests {
                 }
             }
         }
+    }
+
+    /// Calls: off until turned on, first in the automatic order, matched to
+    /// the call apps only, and one call keeps its clock while it lasts.
+    private static func callContracts(_ suite: TestSuite) {
+        let domain = "com.vorssaint.tests.notch-calls"
+        let defaults = UserDefaults(suiteName: domain)!
+        defaults.removePersistentDomain(forName: domain)
+        defer { defaults.removePersistentDomain(forName: domain) }
+        for (key, value) in Defaults.registeredDefaults where key.hasPrefix("notch") { defaults.set(value, forKey: key) }
+        for (key, value) in AppFeature.availabilityDefaults { defaults.set(value, forKey: key) }
+        defaults.set(true, forKey: DefaultsKey.notchEnabled)
+        suite.expect(!NotchCallSupport.showsActivity(in: defaults), "calls stay out of the closed island until turned on")
+        defaults.set(true, forKey: DefaultsKey.notchCallActivity)
+        suite.expect(NotchCallSupport.showsActivity(in: defaults), "the activity follows its own switch")
+        defaults.set(false, forKey: DefaultsKey.notchEnabled)
+        suite.expect(!NotchCallSupport.showsActivity(in: defaults), "the island's master switch gates it too")
+        suite.expect(SettingsBackupSupport.exportKeys().contains(DefaultsKey.notchCallActivity),
+                     "the switch travels in settings backup")
+
+        suite.expect(NotchSupport.compactActivity(timer: true, downloads: false, music: true, call: true) == .call
+                     && NotchSupport.compactActivity(timer: true, downloads: false, music: true) == .timer,
+                     "a call comes before every other activity")
+        suite.expect(["com.tinyspeck.slackmacgap", "com.microsoft.teams2", "com.hnc.DiscordPTB", "us.zoom.xos",
+                      "com.apple.FaceTime", "Cisco-Systems.Spark"].allSatisfy(NotchCallSupport.isCallApp)
+                     && !["com.apple.Music", "com.google.Chrome", "com.apple.VoiceMemos"].contains(where: NotchCallSupport.isCallApp),
+                     "only call apps count, whatever their case or build")
+
+        let now = Date(timeIntervalSinceReferenceDate: 800_000_000)
+        let slack = NotchCallSupport.next(current: nil, live: [(pid: 40, bundleIdentifier: "com.tinyspeck.slackmacgap")], now: now)
+        let later = now.addingTimeInterval(90)
+        let zoom = (pid: pid_t(30), bundleIdentifier: "us.zoom.xos")
+        suite.expect(slack?.started == now
+                     && NotchCallSupport.next(current: slack, live: [zoom, (pid: 40, bundleIdentifier: "com.tinyspeck.slackmacgap")],
+                                              now: later) == slack
+                     && NotchCallSupport.next(current: slack, live: [zoom], now: later)
+                        == NotchCall(pid: 30, bundleIdentifier: "us.zoom.xos", started: later)
+                     && NotchCallSupport.next(current: slack, live: [], now: later) == nil,
+                     "a call keeps its clock while its app uses the microphone, and the next app starts a new one")
+        suite.expect(NotchCallSupport.reading(slack!, now: now.addingTimeInterval(75)) == "01:15"
+                     && NotchCallSupport.reading(slack!, now: now.addingTimeInterval(3_900)) == "1h05",
+                     "the call's length reads as a stopwatch does")
     }
 
     private static func lowBatteryContracts(_ suite: TestSuite) {

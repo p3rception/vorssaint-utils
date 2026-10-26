@@ -50,6 +50,7 @@ struct NotchMirrorView: View {
             case .calendar: NotchCapsuleCalendarStrip(service: service, size: size, displayGeometry: geometry)
             case .music: NotchCapsuleMusicStrip(service: service, size: size, displayGeometry: geometry)
             case .keepAwake: NotchCapsuleKeepAwakeStrip(service: service, size: size, displayGeometry: geometry)
+            case .call: NotchCapsuleCallStrip(service: service, size: size, displayGeometry: geometry)
             }
         } else {
             switch activity {
@@ -60,6 +61,7 @@ struct NotchMirrorView: View {
             case .calendar: NotchCalendarStrip(service: service, displayGeometry: mirror.strip)
             case .music: NotchMusicStrip(service: service, displayGeometry: mirror.strip)
             case .keepAwake: NotchKeepAwakeStrip(service: service, displayGeometry: mirror.strip)
+            case .call: NotchCallStrip(service: service, displayGeometry: mirror.strip)
             }
         }
     }

@@ -823,12 +823,13 @@ enum NotchMusicStripLayout {
 }
 
 enum NotchCompactActivity: String, Identifiable {
-    case timer, watch, downloads, agents, calendar, music, keepAwake
+    case call, timer, watch, downloads, agents, calendar, music, keepAwake
 
     var id: String { rawValue }
 
     func title(_ language: AppLanguage) -> String {
         switch self {
+        case .call: return FeatureStrings.notchActivities(language).call
         case .timer: return FeatureStrings.notchActivities(language).timer
         case .watch: return FeatureStrings.notchWatch(language).title
         case .downloads: return FeatureStrings.notchFiles(language).downloadsTitle
@@ -839,9 +840,11 @@ enum NotchCompactActivity: String, Identifiable {
         }
     }
 
-    /// Keep Awake has no page of its own: its tile is on Controls.
+    /// Keep Awake has no page of its own: its tile is on Controls. Nor
+    /// does a call, which belongs to its app.
     var module: NotchModule {
         switch self {
+        case .call: return .controls
         case .timer: return .timer
         case .watch: return .watch
         case .downloads: return .downloads
@@ -853,7 +856,11 @@ enum NotchCompactActivity: String, Identifiable {
     }
 
     var symbol: String {
-        self == .keepAwake ? NotchControlItem.keepAwake.symbol : module.symbol
+        switch self {
+        case .keepAwake: return NotchControlItem.keepAwake.symbol
+        case .call: return NotchCallSupport.symbol
+        default: return module.symbol
+        }
     }
 }
 
@@ -1156,6 +1163,12 @@ enum NotchCapsuleLayout {
         let right = reading.map { width(NotchAgentSupport.readingShape($0), font: readingFont) }
             ?? NotchKeepAwakeSupport.symbolWidth(NotchKeepAwakeSupport.openSymbol, size: readingFont.pointSize) + air
         return surface(content: cup + spacing + right, maximum: Maximum.activity, geometry: geometry)
+    }
+
+    /// A call: its app's icon in the marks' slot, then its length.
+    static func callSurface(reading: String, geometry: NotchGeometry) -> CGSize {
+        surface(content: symbolSize + spacing + width(NotchAgentSupport.readingShape(reading), font: readingFont),
+                maximum: Maximum.activity, geometry: geometry)
     }
 
     /// Working agents' marks and the reading the person chose.
@@ -1807,18 +1820,21 @@ enum NotchSupport {
 
     /// Automatic order until the user chooses one of the live activities.
     static func compactActivity(timer: Bool, downloads: Bool, agents: Bool = false,
-                                calendar: Bool = false, music: Bool, keepAwake: Bool = false) -> NotchCompactActivity? {
+                                calendar: Bool = false, music: Bool, keepAwake: Bool = false,
+                                call: Bool = false) -> NotchCompactActivity? {
         compactActivities(timer: timer, downloads: downloads, agents: agents,
-                          calendar: calendar, music: music, keepAwake: keepAwake).first
+                          calendar: calendar, music: music, keepAwake: keepAwake, call: call).first
     }
 
     /// Keep Awake comes last: a session can run all day, even more than
     /// music plays, and it only says that the Mac stays awake. A watch
     /// follows the timer: the person started both and is waiting on them.
+    /// A call comes first: while it lasts, it is what the person is doing.
     static func compactActivities(timer: Bool, watch: Bool = false, downloads: Bool, agents: Bool,
-                                  calendar: Bool, music: Bool, keepAwake: Bool = false) -> [NotchCompactActivity] {
+                                  calendar: Bool, music: Bool, keepAwake: Bool = false,
+                                  call: Bool = false) -> [NotchCompactActivity] {
         let candidates: [(Bool, NotchCompactActivity)] = [
-            (timer, .timer), (watch, .watch), (downloads, .downloads), (agents, .agents),
+            (call, .call), (timer, .timer), (watch, .watch), (downloads, .downloads), (agents, .agents),
             (calendar, .calendar), (music, .music), (keepAwake, .keepAwake)
         ]
         return candidates.compactMap { $0.0 ? $0.1 : nil }

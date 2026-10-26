@@ -97,6 +97,7 @@ struct NotchSettings: View {
     @AppStorage(DefaultsKey.notchAppPanel) private var appPanel = false
     @AppStorage(DefaultsKey.notchHidesMenuBarIcon) private var hidesMenuBarIcon = false
     @AppStorage(DefaultsKey.notchKeepAwakeActivity) private var keepAwakeActivity = false
+    @AppStorage(DefaultsKey.notchCallActivity) private var callActivity = false
     @AppStorage(DefaultsKey.notchScratchpad) private var scratchpad = true
     @AppStorage(DefaultsKey.brightnessControlEnabled) private var brightnessControlEnabled = false
     @AppStorage(DefaultsKey.clipboardHistoryEnabled) private var clipboardHistoryEnabled = false
@@ -128,7 +129,7 @@ struct NotchSettings: View {
          String(microphone), String(battery), String(clipboard), String(clipboardWindow), clipboardCardSize,
          String(capture), String(trackChange), captureAction, String(showInCaptures),
          String(returnHome), homeModule, String(opensActivity), String(scratchpad),
-         String(agentsEnabled), String(watchEnabled), String(keepAwakeActivity), String(shortcutEnabled)]
+         String(agentsEnabled), String(watchEnabled), String(keepAwakeActivity), String(callActivity), String(shortcutEnabled)]
     }
 
     private var access: Binding<NotchQuickAccessConfiguration> {
@@ -422,6 +423,7 @@ struct NotchSettings: View {
             let activities = FeatureStrings.notchActivities(l10n.language)
             SettingsFeatureSwitchRow(symbol: NotchControlItem.keepAwake.symbol, title: activities.keepAwakeActivity,
                                      caption: activities.keepAwakeActivityHint, isOn: $keepAwakeActivity, feature: .keepAwake)
+            switchRow(NotchCallSupport.symbol, activities.callActivity, caption: activities.callActivityHint, isOn: $callActivity)
         case .music:
             let music = FeatureStrings.notchMusicExtras(l10n.language)
             switchRow("music.note", text.playingMusic, isOn: $showPlayingMusic)

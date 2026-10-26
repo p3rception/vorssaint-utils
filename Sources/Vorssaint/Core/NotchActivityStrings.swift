@@ -33,6 +33,9 @@ struct NotchActivityStrings {
     let lowBattery: String
     let keepAwakeActivity: String
     let keepAwakeActivityHint: String
+    let call: String
+    let callActivity: String
+    let callActivityHint: String
 
     func phase(_ phase: NotchTimerPhase) -> String {
         switch phase {
@@ -77,7 +80,10 @@ extension FeatureStrings {
             connected: "Connected",
             lowBattery: "Low battery",
             keepAwakeActivity: "Show “Keep awake” in the closed island",
-            keepAwakeActivityHint: "A running session appears beside the camera with the time it has left, or ∞ when it has no end.")
+            keepAwakeActivityHint: "A running session appears beside the camera with the time it has left, or ∞ when it has no end.",
+            call: "Call",
+            callActivity: "Show calls in the closed island",
+            callActivityHint: "While Slack, Teams, Discord, Zoom, FaceTime or Webex uses the microphone, the app appears beside the camera with the call’s length. Click it to bring the call forward.")
         case .ptBR: return NotchActivityStrings(
             timer: "Temporizador",
             timerDescription: "Temporizadores, cronômetro e sessões de foco no Dynamic Island.",
@@ -107,7 +113,10 @@ extension FeatureStrings {
             connected: "Conectado",
             lowBattery: "Bateria baixa",
             keepAwakeActivity: "Mostrar “Manter acordado” na ilha fechada",
-            keepAwakeActivityHint: "A sessão em andamento aparece ao lado da câmera com o tempo restante, ou ∞ quando não tem fim.")
+            keepAwakeActivityHint: "A sessão em andamento aparece ao lado da câmera com o tempo restante, ou ∞ quando não tem fim.",
+            call: "Chamada",
+            callActivity: "Mostrar chamadas na ilha fechada",
+            callActivityHint: "Enquanto Slack, Teams, Discord, Zoom, FaceTime ou Webex usa o microfone, o app aparece ao lado da câmera com a duração da chamada. Clique para trazer a chamada para a frente.")
         case .es: return NotchActivityStrings(
             timer: "Temporizador",
             timerDescription: "Temporizadores, cronómetro y sesiones de concentración en el Dynamic Island.",
@@ -137,7 +146,10 @@ extension FeatureStrings {
             connected: "Conectado",
             lowBattery: "Batería baja",
             keepAwakeActivity: "Mostrar “Mantener activo” en la isla cerrada",
-            keepAwakeActivityHint: "La sesión en curso aparece junto a la cámara con el tiempo restante, o ∞ si no tiene fin.")
+            keepAwakeActivityHint: "La sesión en curso aparece junto a la cámara con el tiempo restante, o ∞ si no tiene fin.",
+            call: "Llamada",
+            callActivity: "Mostrar llamadas en la isla cerrada",
+            callActivityHint: "Mientras Slack, Teams, Discord, Zoom, FaceTime o Webex usa el micrófono, la app aparece junto a la cámara con la duración de la llamada. Haz clic para traer la llamada al frente.")
         case .sk: return NotchActivityStrings(
             timer: "Časovač",
             timerDescription: "Časovače, stopky a sústredené pracovné sedenia v Dynamic Island.",
@@ -167,7 +179,10 @@ extension FeatureStrings {
             connected: "Pripojené",
             lowBattery: "Slabá batéria",
             keepAwakeActivity: "Zobraziť „Bdelý režim“ v zatvorenom Dynamic Island",
-            keepAwakeActivityHint: "Prebiehajúca relácia sa zobrazí vedľa kamery so zostávajúcim časom alebo so znakom ∞, ak nemá koniec.")
+            keepAwakeActivityHint: "Prebiehajúca relácia sa zobrazí vedľa kamery so zostávajúcim časom alebo so znakom ∞, ak nemá koniec.",
+            call: "Hovor",
+            callActivity: "Zobraziť hovory v zatvorenom Dynamic Island",
+            callActivityHint: "Kým Slack, Teams, Discord, Zoom, FaceTime alebo Webex používa mikrofón, aplikácia sa zobrazí vedľa kamery s dĺžkou hovoru. Kliknutím prenesiete hovor do popredia.")
         case .de: return NotchActivityStrings(
             timer: "Timer",
             timerDescription: "Timer, Stoppuhr und konzentrierte Arbeitsphasen im Dynamic Island.",
@@ -197,7 +212,10 @@ extension FeatureStrings {
             connected: "Verbunden",
             lowBattery: "Batterie schwach",
             keepAwakeActivity: "„Wachhalten“ in der geschlossenen Insel zeigen",
-            keepAwakeActivityHint: "Eine laufende Sitzung erscheint neben der Kamera mit der verbleibenden Zeit oder ∞, wenn sie kein Ende hat.")
+            keepAwakeActivityHint: "Eine laufende Sitzung erscheint neben der Kamera mit der verbleibenden Zeit oder ∞, wenn sie kein Ende hat.",
+            call: "Anruf",
+            callActivity: "Anrufe in der geschlossenen Insel zeigen",
+            callActivityHint: "Solange Slack, Teams, Discord, Zoom, FaceTime oder Webex das Mikrofon nutzt, erscheint die App neben der Kamera mit der Dauer des Anrufs. Ein Klick holt den Anruf nach vorne.")
         case .fr: return NotchActivityStrings(
             timer: "Minuteur",
             timerDescription: "Des minuteurs, un chronomètre et des séances de concentration dans le Dynamic Island.",
@@ -227,7 +245,10 @@ extension FeatureStrings {
             connected: "Connecté",
             lowBattery: "Batterie faible",
             keepAwakeActivity: "Afficher «\u{00A0}Garder éveillé\u{00A0}» dans l’île fermée",
-            keepAwakeActivityHint: "Une session en cours apparaît à côté de la caméra avec le temps restant, ou ∞ si elle n’a pas de fin.")
+            keepAwakeActivityHint: "Une session en cours apparaît à côté de la caméra avec le temps restant, ou ∞ si elle n’a pas de fin.",
+            call: "Appel",
+            callActivity: "Afficher les appels dans l’île fermée",
+            callActivityHint: "Tant que Slack, Teams, Discord, Zoom, FaceTime ou Webex utilise le micro, l’app apparaît à côté de la caméra avec la durée de l’appel. Cliquez pour ramener l’appel au premier plan.")
         case .it: return NotchActivityStrings(
             timer: "Timer",
             timerDescription: "Timer, cronometro e sessioni di concentrazione nel Dynamic Island.",
@@ -257,7 +278,10 @@ extension FeatureStrings {
             connected: "Connesso",
             lowBattery: "Batteria scarica",
             keepAwakeActivity: "Mostra “Mantieni attivo” nell’isola chiusa",
-            keepAwakeActivityHint: "Una sessione in corso appare accanto alla fotocamera con il tempo rimanente, o ∞ se non ha una fine.")
+            keepAwakeActivityHint: "Una sessione in corso appare accanto alla fotocamera con il tempo rimanente, o ∞ se non ha una fine.",
+            call: "Chiamata",
+            callActivity: "Mostra le chiamate nell’isola chiusa",
+            callActivityHint: "Mentre Slack, Teams, Discord, Zoom, FaceTime o Webex usa il microfono, l’app appare accanto alla fotocamera con la durata della chiamata. Fai clic per portare la chiamata in primo piano.")
         case .ru: return NotchActivityStrings(
             timer: "Таймер",
             timerDescription: "Таймеры, секундомер и сеансы сосредоточенной работы в вырезе экрана.",
@@ -287,7 +311,10 @@ extension FeatureStrings {
             connected: "Подключено",
             lowBattery: "Низкий заряд",
             keepAwakeActivity: "Показывать «Не давать Mac уснуть» в закрытом острове",
-            keepAwakeActivityHint: "Текущий сеанс появляется рядом с камерой с оставшимся временем или знаком ∞, если у него нет окончания.")
+            keepAwakeActivityHint: "Текущий сеанс появляется рядом с камерой с оставшимся временем или знаком ∞, если у него нет окончания.",
+            call: "Звонок",
+            callActivity: "Показывать звонки в закрытом острове",
+            callActivityHint: "Пока Slack, Teams, Discord, Zoom, FaceTime или Webex использует микрофон, приложение появляется рядом с камерой с длительностью звонка. Нажмите, чтобы перейти к звонку.")
         case .tr: return NotchActivityStrings(
             timer: "Zamanlayıcı",
             timerDescription: "Çentikte zamanlayıcılar, kronometre ve odaklanma oturumları.",
@@ -317,7 +344,10 @@ extension FeatureStrings {
             connected: "Bağlandı",
             lowBattery: "Pil zayıf",
             keepAwakeActivity: "“Uyanık tut” özelliğini kapalı adada göster",
-            keepAwakeActivityHint: "Süren oturum, kalan süresiyle ya da bitişi yoksa ∞ ile kameranın yanında görünür.")
+            keepAwakeActivityHint: "Süren oturum, kalan süresiyle ya da bitişi yoksa ∞ ile kameranın yanında görünür.",
+            call: "Arama",
+            callActivity: "Aramaları kapalı adada göster",
+            callActivityHint: "Slack, Teams, Discord, Zoom, FaceTime veya Webex mikrofonu kullanırken uygulama, aramanın süresiyle kameranın yanında görünür. Aramayı öne getirmek için tıklayın.")
         case .ja: return NotchActivityStrings(
             timer: "タイマー",
             timerDescription: "Dynamic Islandでタイマー、ストップウォッチ、集中セッションを使えます。",
@@ -347,7 +377,10 @@ extension FeatureStrings {
             connected: "接続済み",
             lowBattery: "バッテリー残量低下",
             keepAwakeActivity: "閉じた島に「スリープ防止」を表示",
-            keepAwakeActivityHint: "実行中のセッションが残り時間とともにカメラの横に表示されます。終了時刻がない場合は∞になります。")
+            keepAwakeActivityHint: "実行中のセッションが残り時間とともにカメラの横に表示されます。終了時刻がない場合は∞になります。",
+            call: "通話",
+            callActivity: "閉じた島に通話を表示",
+            callActivityHint: "Slack、Teams、Discord、Zoom、FaceTime、Webexがマイクを使用している間、アプリが通話時間とともにカメラの横に表示されます。クリックすると通話が前面に表示されます。")
         case .ko: return NotchActivityStrings(
             timer: "타이머",
             timerDescription: "Dynamic Island에서 타이머, 스톱워치, 집중 세션을 사용하세요.",
@@ -377,7 +410,10 @@ extension FeatureStrings {
             connected: "연결됨",
             lowBattery: "배터리 부족",
             keepAwakeActivity: "닫힌 섬에 절전 방지 표시",
-            keepAwakeActivityHint: "진행 중인 세션이 남은 시간과 함께 카메라 옆에 표시되며, 끝이 없으면 ∞로 표시됩니다.")
+            keepAwakeActivityHint: "진행 중인 세션이 남은 시간과 함께 카메라 옆에 표시되며, 끝이 없으면 ∞로 표시됩니다.",
+            call: "통화",
+            callActivity: "닫힌 섬에 통화 표시",
+            callActivityHint: "Slack, Teams, Discord, Zoom, FaceTime 또는 Webex가 마이크를 사용하는 동안 앱이 통화 시간과 함께 카메라 옆에 표시됩니다. 클릭하면 통화가 앞으로 옵니다.")
         case .zhHans: return NotchActivityStrings(
             timer: "计时器",
             timerDescription: "在Dynamic Island中使用计时器、秒表和专注时段。",
@@ -407,7 +443,10 @@ extension FeatureStrings {
             connected: "已连接",
             lowBattery: "电量低",
             keepAwakeActivity: "在收起的岛中显示“保持唤醒”",
-            keepAwakeActivityHint: "进行中的会话会显示在摄像头旁，并附上剩余时间；没有结束时间时显示 ∞。")
+            keepAwakeActivityHint: "进行中的会话会显示在摄像头旁，并附上剩余时间；没有结束时间时显示 ∞。",
+            call: "通话",
+            callActivity: "在收起的岛中显示通话",
+            callActivityHint: "当 Slack、Teams、Discord、Zoom、FaceTime 或 Webex 使用麦克风时，该应用会连同通话时长显示在摄像头旁。点击即可将通话移到前面。")
         case .zhTW: return NotchActivityStrings(
             timer: "計時器",
             timerDescription: "在Dynamic Island中使用計時器、碼錶與專注時段。",
@@ -437,7 +476,10 @@ extension FeatureStrings {
             connected: "已連接",
             lowBattery: "電量不足",
             keepAwakeActivity: "在收合的島中顯示「保持喚醒」",
-            keepAwakeActivityHint: "進行中的工作階段會顯示在相機旁並附上剩餘時間；沒有結束時間時顯示 ∞。")
+            keepAwakeActivityHint: "進行中的工作階段會顯示在相機旁並附上剩餘時間；沒有結束時間時顯示 ∞。",
+            call: "通話",
+            callActivity: "在收合的島中顯示通話",
+            callActivityHint: "當 Slack、Teams、Discord、Zoom、FaceTime 或 Webex 使用麥克風時，該 App 會連同通話時間顯示在相機旁。按一下即可將通話移到最前面。")
         case .zhHK: return NotchActivityStrings(
             timer: "計時器",
             timerDescription: "在Dynamic Island中使用計時器、秒錶和專注時段。",
@@ -467,7 +509,10 @@ extension FeatureStrings {
             connected: "已連接",
             lowBattery: "電量不足",
             keepAwakeActivity: "在收合的島中顯示「保持喚醒」",
-            keepAwakeActivityHint: "進行中的時段會顯示在相機旁並附上剩餘時間；沒有結束時間時顯示 ∞。")
+            keepAwakeActivityHint: "進行中的時段會顯示在相機旁並附上剩餘時間；沒有結束時間時顯示 ∞。",
+            call: "通話",
+            callActivity: "在收合的島中顯示通話",
+            callActivityHint: "當 Slack、Teams、Discord、Zoom、FaceTime 或 Webex 使用咪高峰時，該 App 會連同通話時間顯示在相機旁。按一下即可將通話移到最前面。")
         case .uk: return NotchActivityStrings(
             timer: "Таймер",
             timerDescription: "Таймери, секундомір і сеанси зосередженої роботи у Dynamic Island.",
@@ -497,7 +542,10 @@ extension FeatureStrings {
             connected: "Підключено",
             lowBattery: "Низький заряд",
             keepAwakeActivity: "Показувати «Не давати Mac заснути» в закритому острівці",
-            keepAwakeActivityHint: "Поточний сеанс з’являється біля камери із залишком часу або знаком ∞, якщо він не має завершення.")
+            keepAwakeActivityHint: "Поточний сеанс з’являється біля камери із залишком часу або знаком ∞, якщо він не має завершення.",
+            call: "Дзвінок",
+            callActivity: "Показувати дзвінки в закритому острівці",
+            callActivityHint: "Поки Slack, Teams, Discord, Zoom, FaceTime або Webex використовує мікрофон, застосунок з’являється біля камери з тривалістю дзвінка. Натисніть, щоб перейти до дзвінка.")
         }
     }
 }

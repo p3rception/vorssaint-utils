@@ -524,6 +524,10 @@ final class NotchService: ObservableObject {
         NotchKeepAwakeSupport.showsActivity() && KeepAwakeManager.shared.isActive
     }
 
+    var hasCallActivity: Bool {
+        NotchCallSupport.showsActivity() && NotchCallService.shared.call != nil
+    }
+
     var compactActivity: NotchCompactActivity? {
         // A new song waiting for its notice is not drawn yet.
         activitySelection.current(available: awaitsTrackNotice ? compactActivities.filter { $0 != .music } : compactActivities)
@@ -532,7 +536,7 @@ final class NotchService: ObservableObject {
     var compactActivities: [NotchCompactActivity] {
         NotchSupport.compactActivities(timer: hasTimerActivity, watch: hasWatchActivity, downloads: hasDownloadActivity,
                                       agents: hasAgentActivity, calendar: hasCalendarActivity,
-                                      music: hasMusicActivity, keepAwake: hasKeepAwakeActivity)
+                                      music: hasMusicActivity, keepAwake: hasKeepAwakeActivity, call: hasCallActivity)
     }
 
     var showsCompactActivityPicker: Bool {
@@ -658,6 +662,7 @@ final class NotchService: ObservableObject {
                                                     paired: companion != nil)
         // Its reading is a countdown like the timer's, so it takes the timer's wings.
         case .keepAwake: return geometry.compactTimerGeometry(showsDownloads: false, wing: keepAwakeStripWing(in: geometry))
+        case .call: return geometry.compactTimerGeometry(showsDownloads: false, wing: callStripWing(in: geometry))
         default: return geometry
         }
     }
@@ -674,6 +679,11 @@ final class NotchService: ObservableObject {
             ]).width.rounded(.up)
         let inset = provisional.compactActivityEdgeInset(boxHeight: size * 0.72, radius: 0)
         return reading + inset + NotchTimerSupport.stripCameraGap
+    }
+
+    private func callStripWing(in geometry: NotchGeometry) -> CGFloat {
+        let reading = NotchCallService.shared.call.map { NotchCallSupport.reading($0, now: Date()) } ?? "00:00"
+        return NotchCallSupport.stripWing(reading: reading, in: geometry)
     }
 
     private func keepAwakeStripWing(in geometry: NotchGeometry) -> CGFloat {
@@ -1066,6 +1076,9 @@ final class NotchService: ObservableObject {
                 NotchKeepAwakeSupport.compactText(until: $0, now: Date(), locale: Locale(identifier: language.rawValue))
             }
             return layout.keepAwakeSurface(reading: reading, geometry: geometry)
+        case .call:
+            guard let call = NotchCallService.shared.call else { return geometry.restingSize(showsContent: false) }
+            return layout.callSurface(reading: NotchCallSupport.reading(call, now: Date()), geometry: geometry)
         }
     }
 
@@ -1142,6 +1155,7 @@ final class NotchService: ObservableObject {
         homeControls = NotchSupport.controls()
         NotchDownloadService.shared.syncWithPreferences()
         NotchCalendarService.shared.syncWithPreferences()
+        NotchCallService.shared.syncWithPreferences()
         NotchNotificationService.shared.syncWithPreferences()
         NotchAudioLevelService.shared.syncWithPreferences()
         AgentUsageService.shared.syncWithPreferences()
@@ -1155,7 +1169,7 @@ final class NotchService: ObservableObject {
         NotchAccessoryService.shared.syncWithPreferences()
         let signature = NotchEvent.allCases.map { String(NotchSupport.routes($0)) }.joined()
             + NotchSupport.idleContent().rawValue + String(NotchSupport.watchesMusicActivity())
-            + String(NotchKeepAwakeSupport.showsActivity())
+            + String(NotchKeepAwakeSupport.showsActivity()) + String(NotchCallSupport.showsActivity())
             + modules.map(\.rawValue).joined()
             + String(AppFeature.fanControl.isAvailable)
             + String(NotchSupport.routesShelf()) + String(NotchSupport.revealsShelfDrag())
@@ -1295,6 +1309,7 @@ final class NotchService: ObservableObject {
         NotchAccessoryService.shared.suspend()
         NotchDownloadService.shared.stop()
         NotchCalendarService.shared.stop()
+        NotchCallService.shared.stop()
         NotchNotificationService.shared.stop()
         AgentUsageService.shared.pause()
         settingsSignature = ""
@@ -4023,6 +4038,16 @@ final class NotchService: ObservableObject {
             // change the reading and the wings it needs.
             let awake = KeepAwakeManager.shared
             awake.$isActive.combineLatest(awake.$endDate).removeDuplicates { $0 == $1 }
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] _ in
+                    self?.syncMenuSpaceMonitoring()
+                    self?.objectWillChange.send()
+                    self?.refreshPresentation()
+                }.store(in: &subscriptions)
+        }
+        if NotchCallSupport.showsActivity() {
+            // A call starting or ending, which brings or takes away its strip.
+            NotchCallService.shared.$call.removeDuplicates()
                 .receive(on: DispatchQueue.main)
                 .sink { [weak self] _ in
                     self?.syncMenuSpaceMonitoring()

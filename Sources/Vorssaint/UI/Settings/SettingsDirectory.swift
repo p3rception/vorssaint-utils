@@ -365,6 +365,7 @@ enum SettingsDirectory {
                                       keywords: [FeatureStrings.notch(language).description,
                                                  FeatureStrings.notchEditor(language).hideMenuBarIcon,
                                                  FeatureStrings.notchActivities(language).keepAwakeActivity,
+                                                 FeatureStrings.notchActivities(language).callActivity,
                                                  FeatureStrings.notchActivities(language).hideTimerCountdown,
                                                  FeatureStrings.notchCalendar(language).weekNumbers,
                                                  "notch", "camera", "music", "clipboard",
