@@ -2250,6 +2250,17 @@ enum NotchTests {
                && NotchQuickAction(id: NotchQuickAction.control(.scratchpad).id) == .control(.scratchpad)
                && NotchQuickAction.optionalActions.contains(.control(.scratchpad)),
                "the scratchpad shortcut can be shown among the controls and placed as a floating button")
+        var quickReturn = NotchQuickAccessReturn<NotchModule>()
+        quickReturn.opened(.mixer, by: .module(.mixer), leaving: .controls)
+        suite.expect(quickReturn.back(for: .module(.mixer), from: .mixer) == .controls
+               && quickReturn.back(for: .module(.music), from: .mixer) == nil
+               && quickReturn.back(for: .module(.mixer), from: .music) == nil,
+               "a second click on the open page's button returns to the page it left, and no other click does")
+        var fromClosed = NotchQuickAccessReturn<NotchModule>()
+        fromClosed.opened(.mixer, by: .module(.mixer), leaving: nil)
+        suite.expect(fromClosed.back(for: .module(.mixer), from: .mixer) == nil
+               && NotchQuickAction.control(.mixer).opensPage && !NotchQuickAction.control(.microphone).opensPage,
+               "a page the island opened on has nothing to return to, and switches never go back")
         defaults.set(false, forKey: AppFeature.scratchpad.availabilityKey)
         suite.expect(!NotchSupport.controls(in: defaults).contains(.scratchpad)
                && !NotchQuickAction.control(.scratchpad).isAvailable(in: defaults),

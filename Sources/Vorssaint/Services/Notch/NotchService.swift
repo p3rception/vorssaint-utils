@@ -6,6 +6,14 @@ import Combine
 import IOKit.ps
 import SwiftUI
 
+/// A page of the open island, as a quick access button sees it.
+struct NotchShownPage: Equatable {
+    let module: NotchModule
+    let appPanel: Bool
+    let sections: Bool
+    let metric: MetricDetailKind?
+}
+
 struct NotchNotice: Equatable {
     let event: NotchEvent
     let title: String
@@ -215,6 +223,7 @@ final class NotchService: ObservableObject {
     /// opened on, from the menu bar for instance, has nothing behind it and
     /// closes like the menu panel.
     private var detailHasPage = false
+    private var quickAccessReturn = NotchQuickAccessReturn<NotchShownPage>()
     /// What a page shows over its own content, such as the mixer's options or
     /// the month grid, and how to close it; Escape closes it before the page.
     private var pageLayers: [NotchModule: () -> Void] = [:]
@@ -1845,8 +1854,21 @@ final class NotchService: ObservableObject {
         return true
     }
 
+    /// The open page; nil while the island is closed or the Command Bar covers it.
+    private var shownPage: NotchShownPage? {
+        guard expanded, !showingCommandBar else { return nil }
+        return NotchShownPage(module: selected, appPanel: showingAppPanel, sections: showingSections, metric: selectedMetric)
+    }
+
     func activateQuickAction(_ action: NotchQuickAction) {
         guard NotchSupport.isEnabled(), action.isAvailable() else { return }
+        let page = shownPage
+        if action.opensPage, let back = quickAccessReturn.back(for: action, from: page) {
+            quickAccessReturn = NotchQuickAccessReturn<NotchShownPage>()
+            open(back.module, appPanel: back.appPanel, metric: back.metric, sections: back.sections)
+            return
+        }
+        defer { if action.opensPage { quickAccessReturn.opened(shownPage, by: action, leaving: page) } }
         switch action {
         case .explore: toggleSections()
         case .settings: openSettings()

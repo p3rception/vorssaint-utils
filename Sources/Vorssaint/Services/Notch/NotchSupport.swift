@@ -1393,6 +1393,38 @@ enum NotchQuickAction: Hashable, Identifiable {
         default: return true
         }
     }
+
+    /// Buttons that open a page of the island, rather than act or switch something.
+    var opensPage: Bool {
+        switch self {
+        case .module: return true
+        case .control(let item):
+            switch item {
+            case .mixer, .music, .timer, .calendar, .volume, .brightness, .keyboardLight, .speedTest, .panel: return true
+            default: return false
+            }
+        default: return false
+        }
+    }
+}
+
+/// A second click on the button of the open page returns to the page that
+/// button left, as Explore's button does. Another button, or a page reached
+/// some other way, opens as before.
+struct NotchQuickAccessReturn<Page: Equatable> {
+    private var action: NotchQuickAction?
+    private var page: Page?
+    private var previous: Page?
+
+    func back(for action: NotchQuickAction, from shown: Page?) -> Page? {
+        guard action == self.action, shown != nil, shown == page else { return nil }
+        return previous
+    }
+
+    mutating func opened(_ page: Page?, by action: NotchQuickAction, leaving previous: Page?) {
+        guard let page, let previous, page != previous else { return }
+        self = Self(action: action, page: page, previous: previous)
+    }
 }
 
 struct NotchQuickButton: Codable, Equatable, Identifiable {
