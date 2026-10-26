@@ -742,7 +742,7 @@ struct NotchCapsuleCallStrip: View {
                 Image(nsImage: ResponsibleProcess.icon(for: call.pid, pointSize: CapsuleLayout.symbolSize))
                     .resizable().frame(width: CapsuleLayout.symbolSize, height: CapsuleLayout.symbolSize)
                 Text(reading)
-                    .font(Font(CapsuleLayout.readingFont as CTFont))
+                    .font(Font(NotchCallSupport.capsuleReadingFont as CTFont))
                     .foregroundStyle(.green)
                     .lineLimit(1).fixedSize()
                     // A reading that changes shape, like 59:59 becoming

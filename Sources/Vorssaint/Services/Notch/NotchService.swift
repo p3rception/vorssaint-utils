@@ -539,10 +539,12 @@ final class NotchService: ObservableObject {
                                       music: hasMusicActivity, keepAwake: hasKeepAwakeActivity, call: hasCallActivity)
     }
 
+    /// A call opens its page on hover instead: its controls are what the
+    /// person reaches for, and the open island still has every other page.
     var showsCompactActivityPicker: Bool {
         (inside || activityPickerMenuOpen) && !hiddenInFullscreen && !hiddenUntilHover && !expanded && !peeking
             && !dragPlaceholder && notice == nil && captureControls == nil
-            && compactActivities.count > 1
+            && compactActivities.count > 1 && compactActivity != .call
     }
 
     var compactActivityPickerLayout: NotchActivityPickerLayout {

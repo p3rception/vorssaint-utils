@@ -9,6 +9,7 @@ import SwiftUI
 struct NotchCallView: View {
     let size: CGSize
     @ObservedObject private var calls = NotchCallService.shared
+    @ObservedObject private var permissions = Permissions.shared
     @ObservedObject private var l10n = L10n.shared
     @Environment(\.notchSettingsPreview) private var preview
     private var text: NotchActivityStrings { FeatureStrings.notchActivities(l10n.language) }
@@ -18,7 +19,9 @@ struct NotchCallView: View {
             if let call = calls.call, !preview {
                 let name = ResponsibleProcess.displayName(pid: call.pid, fallback: call.bundleIdentifier)
                 Group {
-                    if let huddle = calls.huddle {
+                    if call.bundleIdentifier.lowercased() == NotchCallSupport.slack, !permissions.accessibility {
+                        PermissionRow(kind: .accessibility)
+                    } else if let huddle = calls.huddle {
                         controls(huddle)
                     } else {
                         NotchEmptyView(symbol: NotchModule.call.symbol, message: name) {

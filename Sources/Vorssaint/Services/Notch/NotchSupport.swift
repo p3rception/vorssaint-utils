@@ -1164,7 +1164,7 @@ enum NotchCapsuleLayout {
 
     /// A call: its app's icon in the marks' slot, then its length.
     static func callSurface(reading: String, geometry: NotchGeometry) -> CGSize {
-        surface(content: symbolSize + spacing + width(NotchAgentSupport.readingShape(reading), font: readingFont),
+        surface(content: symbolSize + spacing + width(NotchAgentSupport.readingShape(reading), font: NotchCallSupport.capsuleReadingFont),
                 maximum: Maximum.activity, geometry: geometry)
     }
 

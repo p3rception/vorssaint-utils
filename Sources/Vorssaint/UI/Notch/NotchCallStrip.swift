@@ -28,7 +28,7 @@ struct NotchCallStrip: View {
         let height = geometry.compactActivityContentHeight
         let wing = geometry.compactActivityWingWidth
         let iconSize = NotchTimerSupport.stripIconSize(height: height)
-        let textSize = NotchTimerSupport.stripTextSize(height: height)
+        let textSize = NotchCallSupport.readingSize(height: height)
         let reading = NotchCallSupport.reading(call, now: now)
         return Button { service.openActivity(NotchCompactActivity.call.module) } label: {
             HStack(spacing: 0) {

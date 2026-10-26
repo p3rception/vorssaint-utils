@@ -75,6 +75,10 @@ enum NotchCallSupport {
         return live.first.map { NotchCall(pid: $0.pid, bundleIdentifier: $0.bundleIdentifier, started: now) }
     }
 
+    /// The call's length reads smaller than a timer's: it only keeps time.
+    static func readingSize(height: CGFloat) -> CGFloat { (NotchTimerSupport.stripTextSize(height: height) * 0.75).rounded() }
+    static let capsuleReadingFont = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .semibold)
+
     /// The stopwatch's reading: minutes and seconds, then hours and minutes.
     static func reading(_ call: NotchCall, now: Date) -> String {
         NotchTimerSupport.compactStopwatchText(now.timeIntervalSince(call.started))
@@ -86,7 +90,7 @@ enum NotchCallSupport {
         let provisional = geometry.compactTimerGeometry(showsDownloads: false,
                                                         wing: NotchTimerSupport.stripWingRange.lowerBound)
         let height = provisional.compactActivityContentHeight
-        let textSize = NotchTimerSupport.stripTextSize(height: height)
+        let textSize = readingSize(height: height)
         let width = (NotchAgentSupport.readingShape(reading) as NSString)
             .size(withAttributes: [.font: NSFont.monospacedDigitSystemFont(ofSize: textSize, weight: .medium)])
             .width.rounded(.up)
