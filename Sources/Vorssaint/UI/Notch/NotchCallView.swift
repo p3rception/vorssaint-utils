@@ -86,31 +86,38 @@ struct NotchCallView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    /// Initials stand in for faces: Slack does not show its pictures to other apps.
+    /// Initials stand in for faces: Slack does not show its pictures to other
+    /// apps. Each person takes a button's size and width, centered over them,
+    /// and a crowd too wide for the page scrolls.
     private func people(_ people: [NotchHuddlePerson]) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(people) { person in
-                    VStack(spacing: 3) {
-                        Text(person.initials).font(.system(size: 11, weight: .semibold))
-                            .frame(width: 28, height: 28)
-                            .background(.white.opacity(0.14), in: Circle())
-                            .overlay(alignment: .bottomTrailing) {
-                                if person.muted {
-                                    Image(systemName: "mic.slash.fill").font(.system(size: 7, weight: .bold))
-                                        .frame(width: 13, height: 13)
-                                        .background(.red, in: Circle())
-                                        .offset(x: 3, y: 3)
-                                }
+        let row = HStack(spacing: 6) {
+            ForEach(people) { person in
+                VStack(spacing: 6) {
+                    Text(person.initials).font(.system(size: 15, weight: .semibold))
+                        .frame(width: 40, height: 40)
+                        .background(.white.opacity(0.28), in: Circle())
+                        .overlay(alignment: .bottomTrailing) {
+                            if person.muted {
+                                Image(systemName: "mic.slash.fill").font(.system(size: 8, weight: .bold))
+                                    .frame(width: 16, height: 16)
+                                    .background(.red, in: Circle())
+                                    .offset(x: 3, y: 3)
                             }
-                        Text(person.name).font(.system(size: 10)).foregroundStyle(.white.opacity(0.7))
-                            .lineLimit(1).frame(maxWidth: 56)
-                    }
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(person.name)
-                    .accessibilityValue(person.muted ? l10n.s.micMutedHUD : "")
+                        }
+                    Text(person.name).font(.system(size: 11, weight: .medium)).foregroundStyle(.white.opacity(0.7))
+                        .lineLimit(1).truncationMode(.tail)
+                        .frame(height: 28, alignment: .top)
                 }
+                .padding(.horizontal, 4)
+                .frame(width: max(0, (size.width - 24) / 5), height: NotchLayout.shortcutHeight)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(person.name)
+                .accessibilityValue(person.muted ? l10n.s.micMutedHUD : "")
             }
+        }
+        return ViewThatFits(in: .horizontal) {
+            row
+            ScrollView(.horizontal, showsIndicators: false) { row }
         }
     }
 
