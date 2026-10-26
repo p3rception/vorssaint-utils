@@ -423,7 +423,6 @@ struct NotchSettings: View {
             let activities = FeatureStrings.notchActivities(l10n.language)
             SettingsFeatureSwitchRow(symbol: NotchControlItem.keepAwake.symbol, title: activities.keepAwakeActivity,
                                      caption: activities.keepAwakeActivityHint, isOn: $keepAwakeActivity, feature: .keepAwake)
-            switchRow(NotchCallSupport.symbol, activities.callActivity, caption: activities.callActivityHint, isOn: $callActivity)
         case .music:
             let music = FeatureStrings.notchMusicExtras(l10n.language)
             switchRow("music.note", text.playingMusic, isOn: $showPlayingMusic)
@@ -530,6 +529,9 @@ struct NotchSettings: View {
         case .watch:
             NotchWatchSettingsControls()
                 .toggleStyle(TrailingSwitchToggleStyle())
+        case .call:
+            let activities = FeatureStrings.notchActivities(l10n.language)
+            switchRow(NotchModule.call.symbol, activities.callActivity, caption: activities.callActivityHint, isOn: $callActivity)
         case .mixer, .system, .tools:
             EmptyView()
         }
@@ -865,6 +867,7 @@ struct NotchSettings: View {
         case .scratchpad: return .scratchpad
         case .agents: return .notchAgents
         case .watch: return .notchWatch
+        case .call: return nil
         }
     }
 
@@ -1038,6 +1041,7 @@ struct NotchSettings: View {
             (module != .timer || timerEnabled) && (module != .camera || cameraEnabled)
                 && (module != .calendar || calendarEnabled) && (module != .notifications || notificationsEnabled)
                 && (module != .agents || agentsEnabled) && (module != .watch || watchEnabled)
+                && (module != .call || callActivity)
                 && !hidden.split(separator: ",").contains(Substring(module.rawValue))
         } set: { shown in
             if module == .timer { timerEnabled = shown }
@@ -1046,6 +1050,7 @@ struct NotchSettings: View {
             if module == .notifications { notificationsEnabled = shown }
             if module == .agents { agentsEnabled = shown }
             if module == .watch { watchEnabled = shown }
+            if module == .call { callActivity = shown }
             var values = Set(hidden.split(separator: ",").map(String.init))
             if shown { values.remove(module.rawValue) } else { values.insert(module.rawValue) }
             hidden = values.sorted().joined(separator: ",")

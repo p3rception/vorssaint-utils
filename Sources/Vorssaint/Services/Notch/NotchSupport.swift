@@ -7,7 +7,7 @@ import Foundation
 import CoreGraphics
 
 enum NotchModule: String, CaseIterable, Identifiable {
-    case controls, mixer, music, clipboard, captures, files, system, tools, calendar, notifications, timer, camera, downloads, scratchpad, agents, watch
+    case controls, mixer, music, clipboard, captures, files, system, tools, calendar, notifications, timer, camera, downloads, scratchpad, agents, watch, call
     var id: String { rawValue }
 
     var symbol: String {
@@ -31,6 +31,7 @@ enum NotchModule: String, CaseIterable, Identifiable {
         case .scratchpad: return "note.text"
         case .agents: return "sparkles"
         case .watch: return "eye"
+        case .call: return "phone"
         }
     }
 
@@ -53,12 +54,13 @@ enum NotchModule: String, CaseIterable, Identifiable {
         case .scratchpad: return "p"
         case .agents: return "g"
         case .watch: return "o"
+        case .call: return "l"
         }
     }
 
     func isAvailable(in defaults: UserDefaults = .standard) -> Bool {
         switch self {
-        case .controls, .music: return true
+        case .controls, .music, .call: return true
         case .timer: return AppFeature.notchTimer.isAvailable(in: defaults)
         case .camera: return AppFeature.cameraPreview.isAvailable(in: defaults)
         case .downloads: return AppFeature.notchDownloads.isAvailable(in: defaults)
@@ -840,11 +842,10 @@ enum NotchCompactActivity: String, Identifiable {
         }
     }
 
-    /// Keep Awake has no page of its own: its tile is on Controls. Nor
-    /// does a call, which belongs to its app.
+    /// Keep Awake has no page of its own: its tile is on Controls.
     var module: NotchModule {
         switch self {
-        case .call: return .controls
+        case .call: return .call
         case .timer: return .timer
         case .watch: return .watch
         case .downloads: return .downloads
@@ -856,11 +857,7 @@ enum NotchCompactActivity: String, Identifiable {
     }
 
     var symbol: String {
-        switch self {
-        case .keepAwake: return NotchControlItem.keepAwake.symbol
-        case .call: return NotchCallSupport.symbol
-        default: return module.symbol
-        }
+        self == .keepAwake ? NotchControlItem.keepAwake.symbol : module.symbol
     }
 }
 
@@ -1899,6 +1896,7 @@ enum NotchSupport {
                 && ($0 != .notifications || defaults.bool(forKey: DefaultsKey.notchNotificationsEnabled))
                 && ($0 != .agents || defaults.bool(forKey: DefaultsKey.notchAgentsEnabled))
                 && ($0 != .watch || defaults.bool(forKey: DefaultsKey.notchWatchEnabled))
+                && ($0 != .call || defaults.bool(forKey: DefaultsKey.notchCallActivity))
         }
     }
 
@@ -2814,7 +2812,7 @@ struct NotchGeometry: Equatable {
                 // Only the cards a person chose; a short set leaves a short island.
                 contentHeight = min(budget, agentsHeight.map { $0 > 0 ? $0 : NotchLayout.emptyHeight } ?? budget)
             // Lists and previews fill the chosen content budget.
-            case .mixer, .calendar, .clipboard, .captures, .files, .notifications, .downloads, .camera, .scratchpad, .watch:
+            case .mixer, .calendar, .clipboard, .captures, .files, .notifications, .downloads, .camera, .scratchpad, .watch, .call:
                 contentHeight = budget
             }
         }

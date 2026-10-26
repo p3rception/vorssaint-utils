@@ -10,6 +10,43 @@ struct NotchCall: Equatable {
     let started: Date
 }
 
+/// A control of Slack's huddle bar.
+enum NotchHuddleControl: CaseIterable {
+    case microphone, camera, screen, hand, leave
+
+    /// The button's label while the control is off, then on; the screen
+    /// share keeps its label and says it is on with its value instead.
+    /// ponytail: Slack's English labels, so a Slack in another language
+    /// shows no controls; per-language tables if that is ever needed.
+    var labels: [String] {
+        switch self {
+        case .microphone: return ["Unmute microphone", "Mute microphone"]
+        case .camera: return ["Turn on camera", "Turn off camera"]
+        case .screen: return ["Share your screen"]
+        case .hand: return ["Raise hand", "Lower hand"]
+        case .leave: return ["Leave Huddle"]
+        }
+    }
+}
+
+/// What Slack's huddle bar shows, read through Accessibility.
+struct NotchHuddle: Equatable {
+    var title: String?
+    /// Whether each control is on: the microphone live, the camera on, the
+    /// screen shared, the hand raised. A control Slack does not show is absent.
+    var states: [NotchHuddleControl: Bool] = [:]
+
+    init(title: String?, buttons: [(label: String, value: Int?)]) {
+        self.title = title.flatMap { $0.isEmpty ? nil : $0 }
+        for button in buttons {
+            for control in NotchHuddleControl.allCases where control != .leave {
+                guard let index = control.labels.firstIndex(of: button.label) else { continue }
+                states[control] = control == .screen ? (button.value ?? 0) != 0 : index == 1
+            }
+        }
+    }
+}
+
 /// Calls as a live activity of the closed island, for those who turn them on.
 /// No call app tells other apps that a call or huddle is running, so a known
 /// call app using the microphone stands for one: a clip recorded in Slack
@@ -18,7 +55,9 @@ enum NotchCallSupport {
     /// Prefixes, so Discord's PTB and Canary builds and the new Teams match too.
     static let apps = ["com.tinyspeck.slackmacgap", "com.microsoft.teams", "com.hnc.discord", "us.zoom.xos",
                        "com.apple.facetime", "cisco-systems.spark", "com.webex.meetingmanager"]
-    static let symbol = "phone.fill"
+    static let slack = "com.tinyspeck.slackmacgap"
+    /// Slack's own name for the huddle bar's toolbar.
+    static let slackHuddleBar = "Huddles actions"
 
     static func showsActivity(in defaults: UserDefaults = .standard) -> Bool {
         NotchSupport.isEnabled(in: defaults) && defaults.bool(forKey: DefaultsKey.notchCallActivity)

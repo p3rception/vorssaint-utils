@@ -5,7 +5,7 @@ import SwiftUI
 
 /// The closed island during a call: the call app's icon left of the camera
 /// and the call's length on the right, in green as a call is on iPhone.
-/// Clicking it brings the call app forward, where the call's controls are.
+/// Clicking it opens the Call page.
 struct NotchCallStrip: View {
     @ObservedObject var service: NotchService
     /// Where the island draws it: its own strip as of the last update, or
@@ -30,7 +30,7 @@ struct NotchCallStrip: View {
         let iconSize = NotchTimerSupport.stripIconSize(height: height)
         let textSize = NotchTimerSupport.stripTextSize(height: height)
         let reading = NotchCallSupport.reading(call, now: now)
-        return Button { NotchCallStrip.bringForward(call) } label: {
+        return Button { service.openActivity(NotchCompactActivity.call.module) } label: {
             HStack(spacing: 0) {
                 Group {
                     if wing >= 28 {
@@ -67,6 +67,7 @@ struct NotchCallStrip: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(FeatureStrings.notchActivities(l10n.language).call)
         .accessibilityValue(Self.status(call, reading: reading))
+        .accessibilityHint(FeatureStrings.notch(l10n.language).open)
         .accessibilityIdentifier("notch.call")
     }
 

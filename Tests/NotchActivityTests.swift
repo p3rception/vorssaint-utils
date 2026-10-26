@@ -139,6 +139,29 @@ enum NotchActivityTests {
         suite.expect(NotchCallSupport.reading(slack!, now: now.addingTimeInterval(75)) == "01:15"
                      && NotchCallSupport.reading(slack!, now: now.addingTimeInterval(3_900)) == "1h05",
                      "the call's length reads as a stopwatch does")
+
+        defaults.set(true, forKey: DefaultsKey.notchEnabled)
+        defaults.set(false, forKey: DefaultsKey.notchCallActivity)
+        suite.expect(!NotchSupport.modules(in: defaults).contains(.call), "the Call page stays out until calls are turned on")
+        defaults.set(true, forKey: DefaultsKey.notchCallActivity)
+        suite.expect(NotchSupport.modules(in: defaults).contains(.call) && NotchCompactActivity.call.module == .call,
+                     "turned on, the Call page is there, and the call's strip opens it")
+
+        // Labels as Slack's huddle bar gave them, live and then muted with the camera on and a hand raised.
+        let live = NotchHuddle(title: "Huddle in design", buttons: [
+            (label: "Mute microphone", value: nil), (label: "Audio settings", value: nil),
+            (label: "Turn on camera", value: nil), (label: "Share your screen", value: 0),
+            (label: "Raise hand", value: nil), (label: "Leave Huddle", value: nil)])
+        suite.expect(live.title == "Huddle in design"
+                     && live.states == [.microphone: true, .camera: false, .screen: false, .hand: false],
+                     "a live microphone, the camera off, nothing shared and no hand read from the bar's labels")
+        let busy = NotchHuddle(title: "", buttons: [
+            (label: "Unmute microphone", value: nil), (label: "Turn off camera", value: nil),
+            (label: "Share your screen", value: 1), (label: "Lower hand", value: nil)])
+        suite.expect(busy.title == nil && busy.states == [.microphone: false, .camera: true, .screen: true, .hand: true],
+                     "each label's other state reads as its control's other state, and an unnamed bar has no title")
+        suite.expect(NotchHuddle(title: nil, buttons: [(label: "Stummschalten", value: nil)]).states.isEmpty,
+                     "labels Slack does not use in English leave the controls out rather than guess")
     }
 
     private static func lowBatteryContracts(_ suite: TestSuite) {
