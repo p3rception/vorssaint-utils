@@ -47,8 +47,7 @@ final class NotchCallService: ObservableObject {
                 listening = false
             }
             for object in watched {
-                var address = Self.address(kAudioProcessPropertyIsRunningInput)
-                AudioObjectRemovePropertyListener(object, &address, Self.callback, nil)
+                for var address in Self.inputChanges { AudioObjectRemovePropertyListener(object, &address, Self.callback, nil) }
             }
             watched = []
         }
@@ -65,8 +64,11 @@ final class NotchCallService: ObservableObject {
         guard listening else { return }
         let objects = Set(AppVolumeMixer.audioProcessObjects())
         for object in objects.subtracting(watched) {
-            var address = Self.address(kAudioProcessPropertyIsRunningInput)
-            if AudioObjectAddPropertyListener(object, &address, Self.callback, nil) == noErr { watched.insert(object) }
+            var added = false
+            for var address in Self.inputChanges {
+                added = AudioObjectAddPropertyListener(object, &address, Self.callback, nil) == noErr || added
+            }
+            if added { watched.insert(object) }
         }
         // A process that ended took its listener with it.
         watched.formIntersection(objects)
@@ -90,9 +92,14 @@ final class NotchCallService: ObservableObject {
         }
     }
 
-    private static func address(_ selector: AudioObjectPropertySelector) -> AudioObjectPropertyAddress {
-        AudioObjectPropertyAddress(mSelector: selector, mScope: kAudioObjectPropertyScopeGlobal,
-                                   mElement: kAudioObjectPropertyElementMain)
+    /// CoreAudio never announces a change of an app's input running, though
+    /// it can be read. Joining, leaving or muting a call announces these.
+    private static let inputChanges = [address(kAudioProcessPropertyIsRunning),
+                                       address(kAudioProcessPropertyDevices, scope: kAudioObjectPropertyScopeInput)]
+
+    private static func address(_ selector: AudioObjectPropertySelector,
+                                scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal) -> AudioObjectPropertyAddress {
+        AudioObjectPropertyAddress(mSelector: selector, mScope: scope, mElement: kAudioObjectPropertyElementMain)
     }
 
     private static func read<T>(_ object: AudioObjectID, _ selector: AudioObjectPropertySelector, _ value: inout T) -> Bool {
