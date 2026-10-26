@@ -1232,7 +1232,9 @@ final class NotchService: ObservableObject {
     }
 
     private func refreshModules() {
-        let updated = NotchSupport.modules()
+        // The Call page is there only during a call; after one the island
+        // opens as it did before, never on an empty Call page.
+        let updated = NotchSupport.modules().filter { $0 != .call || hasCallActivity }
         if modules != updated { modules = updated }
         let selection = modules.contains(selected) ? selected : modules.first ?? .controls
         if selected != selection { selected = selection }
@@ -4048,10 +4050,11 @@ final class NotchService: ObservableObject {
                 }.store(in: &subscriptions)
         }
         if NotchCallSupport.showsActivity() {
-            // A call starting or ending, which brings or takes away its strip.
+            // A call starting or ending, which brings or takes away its strip and page.
             NotchCallService.shared.$call.removeDuplicates()
                 .receive(on: DispatchQueue.main)
                 .sink { [weak self] _ in
+                    self?.refreshModules()
                     self?.syncMenuSpaceMonitoring()
                     self?.objectWillChange.send()
                     self?.refreshPresentation()

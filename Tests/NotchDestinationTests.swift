@@ -96,6 +96,7 @@ enum NotchDestinationContract {
         var panel: Panel? = Panel()
         var windowHost: Host? = Host()
         var modules: [NotchModule] = []
+        var hasCallActivity = false
         var selected = NotchModule.controls
         var selectedMetric: MetricDetailKind?
         var expanded = false
