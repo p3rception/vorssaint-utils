@@ -35,5 +35,7 @@ if [[ "$installed" == "$(git rev-parse --short HEAD) "* ]]; then
     exit 0
 fi
 
-./build.sh --test
+# ponytail: one retry, because upstream's NotchCompactTests rail check fails
+# about half the time on v3.4.2 as released. A real failure fails twice.
+./build.sh --test || ./build.sh --test
 ./build.sh --dev --install
