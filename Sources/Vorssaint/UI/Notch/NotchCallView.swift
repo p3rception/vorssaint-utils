@@ -50,18 +50,32 @@ struct NotchCallView: View {
     }
 
     /// The app's icon, the huddle's name or the app's, and the call's length.
+    /// Beside a camera the name often has no room, and goes before the length does.
     private func header(_ call: NotchCall, name: String) -> some View {
-        HStack(spacing: 6) {
-            Image(nsImage: ResponsibleProcess.icon(for: call.pid, pointSize: 16))
-                .resizable().frame(width: 16, height: 16).accessibilityHidden(true)
-            Text(calls.huddle?.title ?? name).fontWeight(.semibold)
-                .lineLimit(1).truncationMode(.middle)
-            TimelineView(.periodic(from: call.started, by: 1)) { context in
-                Text(NotchCallSupport.reading(call, now: context.date))
-                    .monospacedDigit().foregroundStyle(.green)
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 6) {
+                icon(call)
+                Text(calls.huddle?.title ?? name).fontWeight(.semibold).lineLimit(1).fixedSize()
+                length(call)
+            }
+            HStack(spacing: 6) {
+                icon(call)
+                length(call)
             }
         }
         .font(.system(size: 12))
+    }
+
+    private func icon(_ call: NotchCall) -> some View {
+        Image(nsImage: ResponsibleProcess.icon(for: call.pid, pointSize: 16))
+            .resizable().frame(width: 16, height: 16).accessibilityHidden(true)
+    }
+
+    private func length(_ call: NotchCall) -> some View {
+        TimelineView(.periodic(from: call.started, by: 1)) { context in
+            Text(NotchCallSupport.reading(call, now: context.date))
+                .monospacedDigit().foregroundStyle(.green).lineLimit(1).fixedSize()
+        }
     }
 
     private func controls(_ huddle: NotchHuddle) -> some View {

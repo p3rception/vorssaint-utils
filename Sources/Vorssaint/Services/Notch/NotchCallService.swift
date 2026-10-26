@@ -126,7 +126,14 @@ final class NotchCallService: ObservableObject, @unchecked Sendable {
                 continuation.resume()
             }
         }
-        await readHuddle()
+        // Slack relabels the button a moment after the press, so the page
+        // looks again shortly until it has, rather than at its next second.
+        let before = huddle?.states[control]
+        for _ in 0..<10 {
+            await readHuddle()
+            guard control != .leave, huddle?.states[control] == before else { return }
+            try? await Task.sleep(for: .milliseconds(100))
+        }
     }
 
     private func slackHuddle(pid: pid_t) -> NotchHuddle? {
