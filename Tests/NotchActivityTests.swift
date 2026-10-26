@@ -162,6 +162,15 @@ enum NotchActivityTests {
                      "each label's other state reads as its control's other state, and an unnamed bar has no title")
         suite.expect(NotchHuddle(title: nil, buttons: [(label: "Stummschalten", value: nil)]).states.isEmpty,
                      "labels Slack does not use in English leave the controls out rather than guess")
+        // Tiles as Slack's huddle window gave them: each person twice, the self tile marked as such.
+        let people = NotchHuddle(title: nil, buttons: [], tiles: [
+            (identifier: "huddle-grid-gridcell-self_U0CCEHST7UL", name: "jimmypergel", status: "video is off, audio is off"),
+            (identifier: "huddle-grid-gridcell-e699ce21-d924_U0CBVEY9G6T", name: "Bobo Slack", status: "video is off"),
+            (identifier: "huddle-grid-gridcell-self_U0CCEHST7UL", name: "jimmypergel", status: "video is off, audio is off"),
+            (identifier: "huddle-grid-gridcell-e699ce21-d924_U0CBVEY9G6T", name: "Bobo Slack", status: "video is off")]).people
+        suite.expect(people.map(\.id) == ["U0CCEHST7UL", "U0CBVEY9G6T"] && people.map(\.muted) == [true, false]
+                     && people.map(\.initials) == ["J", "BS"],
+                     "each person once, by their Slack id, muted when their audio is off, with up to two initials")
     }
 
     private static func lowBatteryContracts(_ suite: TestSuite) {

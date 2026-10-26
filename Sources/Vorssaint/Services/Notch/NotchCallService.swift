@@ -28,6 +28,7 @@ final class NotchCallService: ObservableObject, @unchecked Sendable {
     private let accessibilityQueue = DispatchQueue(label: "com.vorssaint.notch-calls.accessibility")
     /// Touched only on `accessibilityQueue`.
     private var huddleBar: (pid: pid_t, element: AXUIElement)?
+    private var huddleGrid: (pid: pid_t, element: AXUIElement)?
 
     private init() {}
 
@@ -149,7 +150,39 @@ final class NotchCallService: ObservableObject, @unchecked Sendable {
         // In Slack's window the bar's group is named for the huddle, such as
         // "Huddle in design"; a huddle in its own window leaves it unnamed.
         let title = Self.attribute(bar, kAXParentAttribute).map { Self.string($0 as! AXUIElement, kAXDescriptionAttribute) }
-        return NotchHuddle(title: title, buttons: buttons)
+        var tiles: [(identifier: String, name: String, status: String)] = []
+        if let grid = slackHuddleGrid(pid: pid) {
+            Self.visit(grid, depth: 8) { element in
+                guard Self.classes(element).contains(Self.personTile) else { return }
+                var name = "", status = ""
+                Self.visit(element, depth: 6) { part in
+                    if name.isEmpty, Self.string(part, kAXRoleAttribute) == kAXStaticTextRole {
+                        name = Self.attribute(part, kAXValueAttribute) as? String ?? ""
+                    }
+                    if Self.classes(part).contains(Self.personTileOverlay) { status = Self.string(part, kAXDescriptionAttribute) }
+                }
+                tiles.append((Self.string(element, "AXDOMIdentifier"), name, status))
+            }
+        }
+        return NotchHuddle(title: title, buttons: buttons, tiles: tiles)
+    }
+
+    /// Slack's own class names for a person's tile and the name and state over it.
+    private static let personTile = "p-huddle_peer_tile"
+    private static let personTileOverlay = "p-huddle_peer_tile__name_overlay"
+    private static let personGrid = "p-huddle_grid_component"
+
+    /// The table of people in the huddle's own window, found as the bar is.
+    private func slackHuddleGrid(pid: pid_t) -> AXUIElement? {
+        if let huddleGrid, huddleGrid.pid == pid, Self.classes(huddleGrid.element).contains(Self.personGrid) {
+            return huddleGrid.element
+        }
+        huddleGrid = nil
+        let windows = Self.attribute(AXUIElementCreateApplication(pid), kAXWindowsAttribute) as? [AXUIElement] ?? []
+        guard let grid = windows.lazy.compactMap({ Self.find(in: $0, depth: 40) { Self.classes($0).contains(Self.personGrid) } }).first
+        else { return nil }
+        huddleGrid = (pid, grid)
+        return grid
     }
 
     /// The bar found last, while it is still there; otherwise found again.
@@ -165,19 +198,24 @@ final class NotchCallService: ObservableObject, @unchecked Sendable {
         // for a client that asks for it.
         AXUIElementSetAttributeValue(app, "AXManualAccessibility" as CFString, kCFBooleanTrue)
         let windows = Self.attribute(app, kAXWindowsAttribute) as? [AXUIElement] ?? []
-        guard let bar = windows.lazy.compactMap({ Self.find(in: $0, depth: 40) }).first else { return nil }
+        guard let bar = windows.lazy.compactMap({ Self.find(in: $0, depth: 40) {
+            Self.string($0, kAXRoleAttribute) == kAXToolbarRole && Self.string($0, kAXDescriptionAttribute) == NotchCallSupport.slackHuddleBar
+        } }).first else { return nil }
         huddleBar = (pid, bar)
         return bar
     }
 
-    private static func find(in element: AXUIElement, depth: Int) -> AXUIElement? {
-        if string(element, kAXRoleAttribute) == kAXToolbarRole,
-           string(element, kAXDescriptionAttribute) == NotchCallSupport.slackHuddleBar { return element }
+    private static func find(in element: AXUIElement, depth: Int, where matches: (AXUIElement) -> Bool) -> AXUIElement? {
+        if matches(element) { return element }
         guard depth > 0 else { return nil }
         for child in attribute(element, kAXChildrenAttribute) as? [AXUIElement] ?? [] {
-            if let bar = find(in: child, depth: depth - 1) { return bar }
+            if let found = find(in: child, depth: depth - 1, where: matches) { return found }
         }
         return nil
+    }
+
+    private static func classes(_ element: AXUIElement) -> [String] {
+        attribute(element, "AXDOMClassList") as? [String] ?? []
     }
 
     private static func button(in bar: AXUIElement, labels: [String]) -> AXUIElement? {

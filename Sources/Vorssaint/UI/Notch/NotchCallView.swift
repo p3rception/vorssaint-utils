@@ -79,6 +79,42 @@ struct NotchCallView: View {
     }
 
     private func controls(_ huddle: NotchHuddle) -> some View {
+        VStack(spacing: 8) {
+            if !huddle.people.isEmpty { people(huddle.people) }
+            buttons(huddle)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    /// Initials stand in for faces: Slack does not show its pictures to other apps.
+    private func people(_ people: [NotchHuddlePerson]) -> some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 10) {
+                ForEach(people) { person in
+                    VStack(spacing: 3) {
+                        Text(person.initials).font(.system(size: 11, weight: .semibold))
+                            .frame(width: 28, height: 28)
+                            .background(.white.opacity(0.14), in: Circle())
+                            .overlay(alignment: .bottomTrailing) {
+                                if person.muted {
+                                    Image(systemName: "mic.slash.fill").font(.system(size: 7, weight: .bold))
+                                        .frame(width: 13, height: 13)
+                                        .background(.red, in: Circle())
+                                        .offset(x: 3, y: 3)
+                                }
+                            }
+                        Text(person.name).font(.system(size: 10)).foregroundStyle(.white.opacity(0.7))
+                            .lineLimit(1).frame(maxWidth: 56)
+                    }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(person.name)
+                    .accessibilityValue(person.muted ? l10n.s.micMutedHUD : "")
+                }
+            }
+        }
+    }
+
+    private func buttons(_ huddle: NotchHuddle) -> some View {
         HStack(spacing: 6) {
             if let live = huddle.states[.microphone] {
                 tile(.microphone, symbol: live ? "mic.fill" : "mic.slash.fill",
@@ -95,7 +131,6 @@ struct NotchCallView: View {
             }
             tile(.leave, symbol: "phone.down.fill", title: text.callLeave, active: true, accent: .alert)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func tile(_ control: NotchHuddleControl, symbol: String, title: String, active: Bool,

@@ -29,15 +29,38 @@ enum NotchHuddleControl: CaseIterable {
     }
 }
 
+/// Someone in a Slack huddle, as their tile shows them.
+struct NotchHuddlePerson: Equatable, Identifiable {
+    let id: String
+    let name: String
+    let muted: Bool
+
+    /// Up to two letters, from the first two words of the name.
+    var initials: String {
+        String(name.split(whereSeparator: { $0.isWhitespace || $0 == "." || $0 == "_" })
+            .prefix(2).compactMap(\.first)).uppercased()
+    }
+}
+
 /// What Slack's huddle bar shows, read through Accessibility.
 struct NotchHuddle: Equatable {
     var title: String?
     /// Whether each control is on: the microphone live, the camera on, the
     /// screen shared, the hand raised. A control Slack does not show is absent.
     var states: [NotchHuddleControl: Bool] = [:]
+    var people: [NotchHuddlePerson] = []
 
-    init(title: String?, buttons: [(label: String, value: Int?)]) {
+    /// `tiles` are Slack's person tiles: the tile's identifier, which ends in
+    /// the person's Slack id, the name on it and what its overlay says, such
+    /// as "video is off, audio is off". Slack lists each tile twice.
+    init(title: String?, buttons: [(label: String, value: Int?)],
+         tiles: [(identifier: String, name: String, status: String)] = []) {
         self.title = title.flatMap { $0.isEmpty ? nil : $0 }
+        for tile in tiles {
+            let id = String(tile.identifier.split(separator: "_").last ?? Substring(tile.identifier))
+            guard !tile.name.isEmpty, !people.contains(where: { $0.id == id }) else { continue }
+            people.append(NotchHuddlePerson(id: id, name: tile.name, muted: tile.status.contains("audio is off")))
+        }
         for button in buttons {
             for control in NotchHuddleControl.allCases where control != .leave {
                 guard let index = control.labels.firstIndex(of: button.label) else { continue }
