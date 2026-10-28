@@ -75,8 +75,4 @@ struct NotchCallStrip: View {
     static func status(_ call: NotchCall, reading: String) -> String {
         ResponsibleProcess.displayName(pid: call.pid, fallback: call.bundleIdentifier) + ", " + reading
     }
-
-    static func bringForward(_ call: NotchCall) {
-        NSRunningApplication(processIdentifier: call.pid)?.activate()
-    }
 }

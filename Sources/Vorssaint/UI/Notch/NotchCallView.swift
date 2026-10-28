@@ -19,20 +19,18 @@ struct NotchCallView: View {
             if let call = calls.call, !preview {
                 let name = ResponsibleProcess.displayName(pid: call.pid, fallback: call.bundleIdentifier)
                 Group {
-                    if call.bundleIdentifier.lowercased() == NotchCallSupport.slack, !permissions.accessibility {
+                    if call.isSlack, !permissions.accessibility {
                         PermissionRow(kind: .accessibility)
                     } else if let huddle = calls.huddle {
                         controls(huddle)
                     } else {
                         NotchEmptyView(symbol: NotchModule.call.symbol, message: name) {
-                            NotchPillButton(title: text.callOpen(name), prominent: true) { NotchCallStrip.bringForward(call) }
+                            NotchPillButton(title: text.callOpen(name), prominent: true) { calls.bringForward() }
                         }
                     }
                 }
                 .notchBand(leading: { header(call, name: name) }, trailing: {
-                    NotchIconButton(symbol: "arrow.up.forward.app", title: text.callOpen(name)) {
-                        NotchCallStrip.bringForward(call)
-                    }
+                    NotchIconButton(symbol: "arrow.up.forward.app", title: text.callOpen(name)) { calls.bringForward() }
                 })
                 // Slack announces none of its huddle's changes, so the bar is
                 // read again each second while the page is open, and no longer.

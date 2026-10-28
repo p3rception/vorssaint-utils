@@ -29,6 +29,9 @@ final class NotchCallService: ObservableObject, @unchecked Sendable {
     /// Touched only on `accessibilityQueue`.
     private var huddleBar: (pid: pid_t, element: AXUIElement)?
     private var huddleGrid: (pid: pid_t, element: AXUIElement)?
+    /// When a search for the people last came up empty. Without Slack's huddle
+    /// window there are none, and each search walks every window Slack has.
+    private var huddleGridMissed: Date?
 
     private init() {}
 
@@ -107,9 +110,14 @@ final class NotchCallService: ObservableObject, @unchecked Sendable {
 
     // MARK: Slack huddle
 
+    func bringForward() {
+        guard let call else { return }
+        NSRunningApplication(processIdentifier: call.pid)?.activate()
+    }
+
     /// Reads the huddle bar once; the Call page asks again while it is open.
     @MainActor func readHuddle() async {
-        guard let call, call.bundleIdentifier.lowercased() == NotchCallSupport.slack else { huddle = nil; return }
+        guard let call, call.isSlack else { huddle = nil; return }
         let read = await withCheckedContinuation { continuation in
             accessibilityQueue.async { continuation.resume(returning: self.slackHuddle(pid: call.pid)) }
         }
@@ -118,7 +126,7 @@ final class NotchCallService: ObservableObject, @unchecked Sendable {
     }
 
     @MainActor func press(_ control: NotchHuddleControl) async {
-        guard let call, call.bundleIdentifier.lowercased() == NotchCallSupport.slack else { return }
+        guard let call, call.isSlack else { return }
         await withCheckedContinuation { continuation in
             accessibilityQueue.async {
                 if let button = self.slackHuddleBar(pid: call.pid).flatMap({ Self.button(in: $0, labels: control.labels) }) {
@@ -142,10 +150,9 @@ final class NotchCallService: ObservableObject, @unchecked Sendable {
         var buttons: [(label: String, value: Int?)] = []
         Self.visit(bar, depth: 6) { element in
             let role = Self.string(element, kAXRoleAttribute)
-            guard role == kAXButtonRole || role == kAXCheckBoxRole else { return }
-            var value: AnyObject?
-            AXUIElementCopyAttributeValue(element, kAXValueAttribute as CFString, &value)
-            buttons.append((Self.string(element, kAXDescriptionAttribute), (value as? NSNumber)?.intValue))
+            guard role == kAXButtonRole || role == kAXCheckBoxRole else { return true }
+            buttons.append((Self.string(element, kAXDescriptionAttribute), (Self.attribute(element, kAXValueAttribute) as? NSNumber)?.intValue))
+            return false
         }
         // In Slack's window the bar's group is named for the huddle, such as
         // "Huddle in design"; a huddle in its own window leaves it unnamed.
@@ -153,15 +160,20 @@ final class NotchCallService: ObservableObject, @unchecked Sendable {
         var tiles: [(identifier: String, name: String, status: String)] = []
         if let grid = slackHuddleGrid(pid: pid) {
             Self.visit(grid, depth: 8) { element in
-                guard Self.classes(element).contains(Self.personTile) else { return }
+                guard Self.classes(element).contains(Self.personTile) else { return true }
+                // Slack lists each tile twice; reading the second only costs calls to Slack.
+                let identifier = Self.string(element, "AXDOMIdentifier")
+                guard !tiles.contains(where: { $0.identifier == identifier }) else { return false }
                 var name = "", status = ""
                 Self.visit(element, depth: 6) { part in
                     if name.isEmpty, Self.string(part, kAXRoleAttribute) == kAXStaticTextRole {
                         name = Self.attribute(part, kAXValueAttribute) as? String ?? ""
                     }
                     if Self.classes(part).contains(Self.personTileOverlay) { status = Self.string(part, kAXDescriptionAttribute) }
+                    return true
                 }
-                tiles.append((Self.string(element, "AXDOMIdentifier"), name, status))
+                tiles.append((identifier, name, status))
+                return false
             }
         }
         return NotchHuddle(title: title, buttons: buttons, tiles: tiles)
@@ -178,9 +190,11 @@ final class NotchCallService: ObservableObject, @unchecked Sendable {
             return huddleGrid.element
         }
         huddleGrid = nil
+        if let huddleGridMissed, Date().timeIntervalSince(huddleGridMissed) < 5 { return nil }
         let windows = Self.attribute(AXUIElementCreateApplication(pid), kAXWindowsAttribute) as? [AXUIElement] ?? []
         guard let grid = windows.lazy.compactMap({ Self.find(in: $0, depth: 40) { Self.classes($0).contains(Self.personGrid) } }).first
-        else { return nil }
+        else { huddleGridMissed = Date(); return nil }
+        huddleGridMissed = nil
         huddleGrid = (pid, grid)
         return grid
     }
@@ -222,13 +236,14 @@ final class NotchCallService: ObservableObject, @unchecked Sendable {
         var found: AXUIElement?
         visit(bar, depth: 6) { element in
             if found == nil, labels.contains(string(element, kAXDescriptionAttribute)) { found = element }
+            return found == nil
         }
         return found
     }
 
-    private static func visit(_ element: AXUIElement, depth: Int, _ body: (AXUIElement) -> Void) {
-        body(element)
-        guard depth > 0 else { return }
+    /// `body` says whether to look inside the element too.
+    private static func visit(_ element: AXUIElement, depth: Int, _ body: (AXUIElement) -> Bool) {
+        guard body(element), depth > 0 else { return }
         for child in attribute(element, kAXChildrenAttribute) as? [AXUIElement] ?? [] { visit(child, depth: depth - 1, body) }
     }
 

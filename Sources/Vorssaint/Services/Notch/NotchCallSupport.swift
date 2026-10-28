@@ -8,6 +8,8 @@ struct NotchCall: Equatable {
     let pid: pid_t
     let bundleIdentifier: String
     let started: Date
+
+    var isSlack: Bool { bundleIdentifier.lowercased() == NotchCallSupport.slack }
 }
 
 /// A control of Slack's huddle bar.
