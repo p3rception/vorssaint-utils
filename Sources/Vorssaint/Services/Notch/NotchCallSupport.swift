@@ -31,35 +31,13 @@ enum NotchHuddleControl: CaseIterable {
     }
 }
 
-/// Someone in a Slack huddle, as their tile shows them.
-struct NotchHuddlePerson: Equatable, Identifiable {
-    let id: String
-    let name: String
-    let muted: Bool
-
-    /// Up to two letters, from the first two words of the name.
-    var initials: String {
-        String(name.split(whereSeparator: { $0.isWhitespace || $0 == "." || $0 == "_" })
-            .prefix(2).compactMap(\.first)).uppercased()
-    }
-}
-
 /// What Slack's huddle bar shows, read through Accessibility.
 struct NotchHuddle: Equatable {
     /// Whether each control is on: the microphone live, the camera on, the
     /// screen shared, the hand raised. A control Slack does not show is absent.
     var states: [NotchHuddleControl: Bool] = [:]
-    var people: [NotchHuddlePerson] = []
 
-    /// `tiles` are Slack's person tiles: the tile's identifier, which ends in
-    /// the person's Slack id, the name on it and what its overlay says, such
-    /// as "video is off, audio is off". Slack lists each tile twice.
-    init(buttons: [(label: String, value: Int?)], tiles: [(identifier: String, name: String, status: String)] = []) {
-        for tile in tiles {
-            let id = String(tile.identifier.split(separator: "_").last ?? Substring(tile.identifier))
-            guard !tile.name.isEmpty, !people.contains(where: { $0.id == id }) else { continue }
-            people.append(NotchHuddlePerson(id: id, name: tile.name, muted: tile.status.contains("audio is off")))
-        }
+    init(buttons: [(label: String, value: Int?)]) {
         for button in buttons {
             for control in NotchHuddleControl.allCases where control != .leave {
                 guard let index = control.labels.firstIndex(of: button.label) else { continue }
@@ -97,14 +75,10 @@ enum NotchCallSupport {
         return live.first.map { NotchCall(pid: $0.pid, bundleIdentifier: $0.bundleIdentifier, started: now) }
     }
 
-    /// The Call page's rows: the controls, and the people above them when
-    /// Slack shows who is there. Nil without controls to show.
+    /// The Call page's row of controls; nil without controls to show.
     static func pageHeight(_ huddle: NotchHuddle?) -> CGFloat? {
-        guard let huddle else { return nil }
-        return huddle.people.isEmpty ? NotchLayout.shortcutHeight : NotchLayout.shortcutHeight * 2 + pageRowSpacing
+        huddle.map { _ in NotchLayout.shortcutHeight }
     }
-
-    static let pageRowSpacing: CGFloat = 8
 
     /// The call's length reads smaller than a timer's: it only keeps time.
     static func readingSize(height: CGFloat) -> CGFloat { (NotchTimerSupport.stripTextSize(height: height) * 0.75).rounded() }

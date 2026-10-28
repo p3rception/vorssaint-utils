@@ -22,7 +22,7 @@ struct NotchCallView: View {
                     if call.isSlack, !permissions.accessibility {
                         PermissionRow(kind: .accessibility)
                     } else if let huddle = calls.huddle {
-                        controls(huddle)
+                        buttons(huddle)
                     } else {
                         NotchEmptyView(symbol: NotchModule.call.symbol, message: name) {
                             NotchPillButton(title: text.callOpen(name), prominent: true) { calls.bringForward() }
@@ -60,49 +60,6 @@ struct NotchCallView: View {
         .font(.system(size: 12))
     }
 
-    private func controls(_ huddle: NotchHuddle) -> some View {
-        VStack(spacing: NotchCallSupport.pageRowSpacing) {
-            if !huddle.people.isEmpty { people(huddle.people) }
-            buttons(huddle)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    /// Initials stand in for faces: Slack does not show its pictures to other
-    /// apps. Each person takes a button's size and width, centered over them,
-    /// and a crowd too wide for the page scrolls.
-    private func people(_ people: [NotchHuddlePerson]) -> some View {
-        let row = HStack(spacing: 6) {
-            ForEach(people) { person in
-                VStack(spacing: 6) {
-                    Text(person.initials).font(.system(size: 15, weight: .semibold))
-                        .frame(width: 40, height: 40)
-                        .background(.white.opacity(0.28), in: Circle())
-                        .overlay(alignment: .bottomTrailing) {
-                            if person.muted {
-                                Image(systemName: "mic.slash.fill").font(.system(size: 8, weight: .bold))
-                                    .frame(width: 16, height: 16)
-                                    .background(.red, in: Circle())
-                                    .offset(x: 3, y: 3)
-                            }
-                        }
-                    Text(person.name).font(.system(size: 11, weight: .medium)).foregroundStyle(.white.opacity(0.7))
-                        .lineLimit(1).truncationMode(.tail)
-                        .frame(height: 28, alignment: .top)
-                }
-                .padding(.horizontal, 4)
-                .frame(width: max(0, (size.width - 24) / 5), height: NotchLayout.shortcutHeight)
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(person.name)
-                .accessibilityValue(person.muted ? l10n.s.micMutedHUD : "")
-            }
-        }
-        return ViewThatFits(in: .horizontal) {
-            row
-            ScrollView(.horizontal, showsIndicators: false) { row }
-        }
-    }
-
     private func buttons(_ huddle: NotchHuddle) -> some View {
         HStack(spacing: 6) {
             if let live = huddle.states[.microphone] {
@@ -120,6 +77,7 @@ struct NotchCallView: View {
             }
             tile(.leave, symbol: "phone.down.fill", title: text.callLeave, active: true, accent: .alert)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func tile(_ control: NotchHuddleControl, symbol: String, title: String, active: Bool,

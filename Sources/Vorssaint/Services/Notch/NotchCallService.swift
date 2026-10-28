@@ -28,10 +28,6 @@ final class NotchCallService: ObservableObject, @unchecked Sendable {
     private let accessibilityQueue = DispatchQueue(label: "com.vorssaint.notch-calls.accessibility")
     /// Touched only on `accessibilityQueue`.
     private var huddleBar: (pid: pid_t, element: AXUIElement)?
-    private var huddleGrid: (pid: pid_t, element: AXUIElement)?
-    /// When a search for the people last came up empty. Without Slack's huddle
-    /// window there are none, and each search walks every window Slack has.
-    private var huddleGridMissed: Date?
 
     private init() {}
 
@@ -162,46 +158,7 @@ final class NotchCallService: ObservableObject, @unchecked Sendable {
             huddleBar = nil
             return nil
         }
-        var tiles: [(identifier: String, name: String, status: String)] = []
-        if let grid = slackHuddleGrid(pid: pid) {
-            Self.visit(grid, depth: 8) { element in
-                guard Self.classes(element).contains(Self.personTile) else { return true }
-                // Slack lists each tile twice; reading the second only costs calls to Slack.
-                let identifier = Self.string(element, "AXDOMIdentifier")
-                guard !tiles.contains(where: { $0.identifier == identifier }) else { return false }
-                var name = "", status = ""
-                Self.visit(element, depth: 6) { part in
-                    if name.isEmpty, Self.string(part, kAXRoleAttribute) == kAXStaticTextRole {
-                        name = Self.attribute(part, kAXValueAttribute) as? String ?? ""
-                    }
-                    if Self.classes(part).contains(Self.personTileOverlay) { status = Self.string(part, kAXDescriptionAttribute) }
-                    return true
-                }
-                tiles.append((identifier, name, status))
-                return false
-            }
-        }
-        return NotchHuddle(buttons: buttons, tiles: tiles)
-    }
-
-    /// Slack's own class names for a person's tile and the name and state over it.
-    private static let personTile = "p-huddle_peer_tile"
-    private static let personTileOverlay = "p-huddle_peer_tile__name_overlay"
-    private static let personGrid = "p-huddle_grid_component"
-
-    /// The table of people in the huddle's own window, found as the bar is.
-    private func slackHuddleGrid(pid: pid_t) -> AXUIElement? {
-        if let huddleGrid, huddleGrid.pid == pid, Self.classes(huddleGrid.element).contains(Self.personGrid) {
-            return huddleGrid.element
-        }
-        huddleGrid = nil
-        if let huddleGridMissed, Date().timeIntervalSince(huddleGridMissed) < 5 { return nil }
-        let windows = Self.attribute(AXUIElementCreateApplication(pid), kAXWindowsAttribute) as? [AXUIElement] ?? []
-        guard let grid = windows.lazy.compactMap({ Self.find(in: $0, depth: 40) { Self.classes($0).contains(Self.personGrid) } }).first
-        else { huddleGridMissed = Date(); return nil }
-        huddleGridMissed = nil
-        huddleGrid = (pid, grid)
-        return grid
+        return NotchHuddle(buttons: buttons)
     }
 
     /// The bar found last, while it is still there; otherwise found again.
@@ -231,10 +188,6 @@ final class NotchCallService: ObservableObject, @unchecked Sendable {
             if let found = find(in: child, depth: depth - 1, where: matches) { return found }
         }
         return nil
-    }
-
-    private static func classes(_ element: AXUIElement) -> [String] {
-        attribute(element, "AXDOMClassList") as? [String] ?? []
     }
 
     private static func button(in bar: AXUIElement, labels: [String]) -> AXUIElement? {
