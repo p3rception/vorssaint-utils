@@ -110,9 +110,11 @@ final class NotchCallService: ObservableObject, @unchecked Sendable {
 
     // MARK: Slack huddle
 
+    /// Opened the way the Dock opens it, so an app whose windows are all
+    /// closed shows its window again instead of only coming forward.
     func bringForward() {
-        guard let call else { return }
-        NSRunningApplication(processIdentifier: call.pid)?.activate()
+        guard let call, let url = NSRunningApplication(processIdentifier: call.pid)?.bundleURL else { return }
+        NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
     }
 
     /// Reads the huddle bar once; the Call page asks again while it is open.
