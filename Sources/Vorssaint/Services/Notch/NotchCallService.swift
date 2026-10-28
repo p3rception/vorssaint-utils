@@ -154,6 +154,12 @@ final class NotchCallService: ObservableObject, @unchecked Sendable {
             buttons.append((Self.string(element, kAXDescriptionAttribute), (Self.attribute(element, kAXValueAttribute) as? NSNumber)?.intValue))
             return false
         }
+        // A window closed and opened again leaves the bar found before still
+        // answering to its name, but empty; the next read finds the new one.
+        guard buttons.contains(where: { NotchHuddleControl.microphone.labels.contains($0.label) }) else {
+            huddleBar = nil
+            return nil
+        }
         var tiles: [(identifier: String, name: String, status: String)] = []
         if let grid = slackHuddleGrid(pid: pid) {
             Self.visit(grid, depth: 8) { element in
