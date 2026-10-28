@@ -863,7 +863,8 @@ final class NotchService: ObservableObject {
                                      timerMode: NotchTimerService.shared.session.hasSession
                                         ? NotchTimerService.shared.session.mode : NotchTimerSupport.savedMode(),
                                      agentsHeight: module == .agents && !detail && !panel
-                                        ? agentsContentHeight(width: geometry.contentWidth) : nil)
+                                        ? agentsContentHeight(width: geometry.contentWidth) : nil,
+                                     callHeight: NotchCallSupport.pageHeight(NotchCallService.shared.huddle))
     }
 
     /// The AI page is as tall as the cards it shows; nil while the logs are
@@ -4050,6 +4051,11 @@ final class NotchService: ObservableObject {
                 }.store(in: &subscriptions)
         }
         if NotchCallSupport.showsActivity() {
+            // People joining or leaving, or Slack's controls found or lost, change the page's height.
+            NotchCallService.shared.$huddle.map(NotchCallSupport.pageHeight).removeDuplicates()
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] _ in self?.refreshPresentation() }
+                .store(in: &subscriptions)
             // A call starting or ending, which brings or takes away its strip and page.
             NotchCallService.shared.$call.removeDuplicates()
                 .receive(on: DispatchQueue.main)

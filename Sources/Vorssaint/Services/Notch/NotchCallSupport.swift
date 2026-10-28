@@ -97,6 +97,15 @@ enum NotchCallSupport {
         return live.first.map { NotchCall(pid: $0.pid, bundleIdentifier: $0.bundleIdentifier, started: now) }
     }
 
+    /// The Call page's rows: the controls, and the people above them when
+    /// Slack shows who is there. Nil without controls to show.
+    static func pageHeight(_ huddle: NotchHuddle?) -> CGFloat? {
+        guard let huddle else { return nil }
+        return huddle.people.isEmpty ? NotchLayout.shortcutHeight : NotchLayout.shortcutHeight * 2 + pageRowSpacing
+    }
+
+    static let pageRowSpacing: CGFloat = 8
+
     /// The call's length reads smaller than a timer's: it only keeps time.
     static func readingSize(height: CGFloat) -> CGFloat { (NotchTimerSupport.stripTextSize(height: height) * 0.75).rounded() }
     static let capsuleReadingFont = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .semibold)

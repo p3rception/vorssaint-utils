@@ -61,7 +61,7 @@ struct NotchCallView: View {
     }
 
     private func controls(_ huddle: NotchHuddle) -> some View {
-        VStack(spacing: 8) {
+        VStack(spacing: NotchCallSupport.pageRowSpacing) {
             if !huddle.people.isEmpty { people(huddle.people) }
             buttons(huddle)
         }

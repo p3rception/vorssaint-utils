@@ -170,6 +170,16 @@ enum NotchActivityTests {
         suite.expect(people.map(\.id) == ["U0CCEHST7UL", "U0CBVEY9G6T"] && people.map(\.muted) == [true, false]
                      && people.map(\.initials) == ["J", "BS"],
                      "each person once, by their Slack id, muted when their audio is off, with up to two initials")
+        let island = NotchGeometry(screen: CGRect(x: 0, y: 0, width: 1470, height: 956), safeAreaTop: 32,
+                                   cameraWidth: 180, menuBarHeight: 32, compactSideRoom: 200)
+        let crowd = NotchHuddle(buttons: [(label: "Mute microphone", value: nil)],
+                                tiles: [(identifier: "self_U1", name: "jimmypergel", status: "")])
+        let alone = island.expandedSize(module: .call, callHeight: NotchCallSupport.pageHeight(live)).height
+        let together = island.expandedSize(module: .call, callHeight: NotchCallSupport.pageHeight(crowd)).height
+        suite.expect(alone < together && together < island.expandedSize(module: .calendar).height
+                     && island.expandedSize(module: .call, callHeight: NotchCallSupport.pageHeight(nil)).height
+                        == island.expandedSize(module: .call, callHeight: NotchLayout.emptyHeight).height,
+                     "the Call page is as tall as its rows, never the whole island, and an empty page's height without controls")
     }
 
     private static func lowBatteryContracts(_ suite: TestSuite) {
