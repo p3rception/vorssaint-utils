@@ -148,22 +148,21 @@ enum NotchActivityTests {
                      "turned on, the Call page is there, and the call's strip opens it")
 
         // Labels as Slack's huddle bar gave them, live and then muted with the camera on and a hand raised.
-        let live = NotchHuddle(title: "Huddle in design", buttons: [
+        let live = NotchHuddle(buttons: [
             (label: "Mute microphone", value: nil), (label: "Audio settings", value: nil),
             (label: "Turn on camera", value: nil), (label: "Share your screen", value: 0),
             (label: "Raise hand", value: nil), (label: "Leave Huddle", value: nil)])
-        suite.expect(live.title == "Huddle in design"
-                     && live.states == [.microphone: true, .camera: false, .screen: false, .hand: false],
+        suite.expect(live.states == [.microphone: true, .camera: false, .screen: false, .hand: false],
                      "a live microphone, the camera off, nothing shared and no hand read from the bar's labels")
-        let busy = NotchHuddle(title: "", buttons: [
+        let busy = NotchHuddle(buttons: [
             (label: "Unmute microphone", value: nil), (label: "Turn off camera", value: nil),
             (label: "Share your screen", value: 1), (label: "Lower hand", value: nil)])
-        suite.expect(busy.title == nil && busy.states == [.microphone: false, .camera: true, .screen: true, .hand: true],
-                     "each label's other state reads as its control's other state, and an unnamed bar has no title")
-        suite.expect(NotchHuddle(title: nil, buttons: [(label: "Stummschalten", value: nil)]).states.isEmpty,
+        suite.expect(busy.states == [.microphone: false, .camera: true, .screen: true, .hand: true],
+                     "each label's other state reads as its control's other state")
+        suite.expect(NotchHuddle(buttons: [(label: "Stummschalten", value: nil)]).states.isEmpty,
                      "labels Slack does not use in English leave the controls out rather than guess")
         // Tiles as Slack's huddle window gave them: each person twice, the self tile marked as such.
-        let people = NotchHuddle(title: nil, buttons: [], tiles: [
+        let people = NotchHuddle(buttons: [], tiles: [
             (identifier: "huddle-grid-gridcell-self_U0CCEHST7UL", name: "jimmypergel", status: "video is off, audio is off"),
             (identifier: "huddle-grid-gridcell-e699ce21-d924_U0CBVEY9G6T", name: "Bobo Slack", status: "video is off"),
             (identifier: "huddle-grid-gridcell-self_U0CCEHST7UL", name: "jimmypergel", status: "video is off, audio is off"),

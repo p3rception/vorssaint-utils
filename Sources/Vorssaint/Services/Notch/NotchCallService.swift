@@ -154,9 +154,6 @@ final class NotchCallService: ObservableObject, @unchecked Sendable {
             buttons.append((Self.string(element, kAXDescriptionAttribute), (Self.attribute(element, kAXValueAttribute) as? NSNumber)?.intValue))
             return false
         }
-        // In Slack's window the bar's group is named for the huddle, such as
-        // "Huddle in design"; a huddle in its own window leaves it unnamed.
-        let title = Self.attribute(bar, kAXParentAttribute).map { Self.string($0 as! AXUIElement, kAXDescriptionAttribute) }
         var tiles: [(identifier: String, name: String, status: String)] = []
         if let grid = slackHuddleGrid(pid: pid) {
             Self.visit(grid, depth: 8) { element in
@@ -176,7 +173,7 @@ final class NotchCallService: ObservableObject, @unchecked Sendable {
                 return false
             }
         }
-        return NotchHuddle(title: title, buttons: buttons, tiles: tiles)
+        return NotchHuddle(buttons: buttons, tiles: tiles)
     }
 
     /// Slack's own class names for a person's tile and the name and state over it.
